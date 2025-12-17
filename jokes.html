@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Joke Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .nav {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 3em;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .categories {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .category-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .category-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .joke-display {
+            min-height: 150px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.3em;
+            line-height: 1.6;
+            color: #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .joke-display.loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .joke-text {
+            z-index: 1;
+            position: relative;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .generate-btn:active {
+            transform: scale(0.98);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.liked {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .action-btn.disliked {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .history-item, .favorite-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-btn:hover {
+            background: #d32f2f;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .stat {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: slideIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <a href="index.html">Home</a> |
+            <a href="resume.html">Resume</a> |
+            <a href="buckets.html">Buckets</a> |
+            <a href="jokes.html">Jokes</a>
+        </nav>
+
+        <!-- Header -->
+        <header>
+            <h1>😂 AI Joke Generator 🤣</h1>
+            <p class="subtitle">Get ready to laugh with AI-powered humor!</p>
+        </header>
+
+        <!-- Main Card -->
+        <div class="main-card">
+            <!-- Categories -->
+            <div class="categories">
+                <button class="category-btn active" data-category="any">Random</button>
+                <button class="category-btn" data-category="dad">Dad Jokes</button>
+                <button class="category-btn" data-category="pun">Puns</button>
+                <button class="category-btn" data-category="knock">Knock-Knock</button>
+                <button class="category-btn" data-category="programming">Programming</button>
+            </div>
+
+            <!-- Joke Display -->
+            <div class="joke-display">
+                <p class="joke-text">Click "Generate Joke" to get started!</p>
+            </div>
+
+            <!-- Generate Button -->
+            <button class="generate-btn" id="generateBtn">🎲 Generate Joke</button>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="action-btn" id="likeBtn">👍 Like</button>
+                <button class="action-btn" id="dislikeBtn">👎 Dislike</button>
+                <button class="action-btn" id="favoriteBtn">⭐ Save Favorite</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number" id="totalJokes">0</div>
+                    <div class="stat-label">Jokes Generated</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="totalLikes">0</div>
+                    <div class="stat-label">Likes</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="totalFavorites">0</div>
+                    <div class="stat-label">Favorites</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="section">
+            <h2>📜 Recent Jokes</h2>
+            <div id="historyContainer">
+                <p class="empty-state">No jokes yet! Generate some jokes to see them here.</p>
+            </div>
+        </div>
+
+        <!-- Favorites Section -->
+        <div class="section">
+            <h2>⭐ Favorite Jokes</h2>
+            <div id="favoritesContainer">
+                <p class="empty-state">No favorites yet! Save your favorite jokes to see them here.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // App State
+        let currentJoke = '';
+        let currentCategory = 'any';
+        let history = [];
+        let favorites = [];
+        let stats = {
+            total: 0,
+            likes: 0,
+            dislikes: 0
+        };
+
+        // Joke Database (fallback if API fails)
+        const jokeDatabase = {
+            dad: [
+                "Why don't scientists trust atoms? Because they make up everything!",
+                "I'm reading a book about anti-gravity. It's impossible to put down!",
+                "Why did the scarecrow win an award? He was outstanding in his field!",
+                "What do you call a fake noodle? An impasta!",
+                "Why don't eggs tell jokes? They'd crack each other up!"
+            ],
+            pun: [
+                "I used to be a banker, but I lost interest.",
+                "Time flies like an arrow. Fruit flies like a banana.",
+                "I'm friends with 25 letters of the alphabet. I don't know Y.",
+                "What do you call a bear with no teeth? A gummy bear!",
+                "I tried to catch fog yesterday. Mist."
+            ],
+            knock: [
+                "Knock knock! Who's there? Lettuce. Lettuce who? Lettuce in, it's cold out here!",
+                "Knock knock! Who's there? Cow says. Cow says who? No silly, cow says moo!",
+                "Knock knock! Who's there? Boo. Boo who? Don't cry, it's just a joke!",
+                "Knock knock! Who's there? Interrupting cow. Interrupting cow wh- MOOOO!",
+                "Knock knock! Who's there? Orange. Orange who? Orange you glad I didn't say banana?"
+            ],
+            programming: [
+                "Why do programmers prefer dark mode? Because light attracts bugs!",
+                "How many programmers does it take to change a light bulb? None, that's a hardware problem!",
+                "Why do Java developers wear glasses? Because they don't C#!",
+                "A SQL query walks into a bar, walks up to two tables and asks... 'Can I join you?'",
+                "Why did the programmer quit his job? Because he didn't get arrays!"
+            ],
+            any: [
+                "What do you call a fish wearing a bowtie? Sofishticated!",
+                "Why did the bicycle fall over? It was two-tired!",
+                "What do you call a snowman with a six-pack? An abdominal snowman!",
+                "Why don't oysters donate to charity? Because they're shellfish!",
+                "What did the ocean say to the beach? Nothing, it just waved!"
+            ]
+        };
+
+        // DOM Elements
+        const jokeDisplay = document.querySelector('.joke-display');
+        const jokeText = document.querySelector('.joke-text');
+        const generateBtn = document.getElementById('generateBtn');
+        const likeBtn = document.getElementById('likeBtn');
+        const dislikeBtn = document.getElementById('dislikeBtn');
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const historyContainer = document.getElementById('historyContainer');
+        const favoritesContainer = document.getElementById('favoritesContainer');
+
+        // Category Selection
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+            });
+        });
+
+        // Generate Joke
+        generateBtn.addEventListener('click', async () => {
+            jokeDisplay.classList.add('loading');
+            jokeText.textContent = 'Generating joke...';
+            
+            // Reset action buttons
+            likeBtn.classList.remove('liked');
+            dislikeBtn.classList.remove('disliked');
+
+            // Get joke from database
+            const jokes = jokeDatabase[currentCategory];
+            const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                currentJoke = randomJoke;
+                jokeText.textContent = currentJoke;
+                jokeDisplay.classList.remove('loading');
+                jokeDisplay.classList.add('animate-in');
+                
+                // Add to history
+                addToHistory(currentJoke);
+                
+                // Update stats
+                stats.total++;
+                updateStats();
+                
+                setTimeout(() => {
+                    jokeDisplay.classList.remove('animate-in');
+                }, 500);
+            }, 1000);
+        });
+
+        // Like Button
+        likeBtn.addEventListener('click', () => {
+            if (!currentJoke) return;
+            
+            likeBtn.classList.toggle('liked');
+            if (likeBtn.classList.contains('liked')) {
+                dislikeBtn.classList.remove('disliked');
+                stats.likes++;
+            } else {
+                stats.likes--;
+            }
+            updateStats();
+        });
+
+        // Dislike Button
+        dislikeBtn.addEventListener('click', () => {
+            if (!currentJoke) return;
+            
+            dislikeBtn.classList.toggle('disliked');
+            if (dislikeBtn.classList.contains('disliked')) {
+                likeBtn.classList.remove('liked');
+                stats.dislikes++;
+            } else {
+                stats.dislikes--;
+            }
+        });
+
+        // Favorite Button
+        favoriteBtn.addEventListener('click', () => {
+            if (!currentJoke) return;
+            
+            if (!favorites.includes(currentJoke)) {
+                favorites.unshift(currentJoke);
+                if (favorites.length > 10) favorites.pop();
+                updateFavorites();
+                
+                // Visual feedback
+                favoriteBtn.textContent = '✅ Saved!';
+                setTimeout(() => {
+                    favoriteBtn.textContent = '⭐ Save Favorite';
+                }, 1500);
+                
+                updateStats();
+            } else {
+                alert('This joke is already in your favorites!');
+            }
+        });
+
+        // Add to History
+        function addToHistory(joke) {
+            history.unshift(joke);
+            if (history.length > 5) history.pop();
+            updateHistory();
+        }
+
+        // Update History Display
+        function updateHistory() {
+            if (history.length === 0) {
+                historyContainer.innerHTML = '<p class="empty-state">No jokes yet! Generate some jokes to see them here.</p>';
+                return;
+            }
+
+            historyContainer.innerHTML = history.map((joke, index) => `
+                <div class="history-item animate-in">
+                    <span>${joke}</span>
+                </div>
+            `).join('');
+        }
+
+        // Update Favorites Display
+        function updateFavorites() {
+            if (favorites.length === 0) {
+                favoritesContainer.innerHTML = '<p class="empty-state">No favorites yet! Save your favorite jokes to see them here.</p>';
+                return;
+            }
+
+            favoritesContainer.innerHTML = favorites.map((joke, index) => `
+                <div class="favorite-item animate-in">
+                    <span>${joke}</span>
+                    <button class="remove-btn" onclick="removeFavorite(${index})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // Remove Favorite
+        function removeFavorite(index) {
+            favorites.splice(index, 1);
+            updateFavorites();
+            updateStats();
+        }
+
+        // Update Stats
+        function updateStats() {
+            document.getElementById('totalJokes').textContent = stats.total;
+            document.getElementById('totalLikes').textContent = stats.likes;
+            document.getElementById('totalFavorites').textContent = favorites.length;
+        }
+
+        // Initialize
+        updateHistory();
+        updateFavorites();
+        updateStats();
+    </script>
+</body>
+</html>
